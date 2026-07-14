@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linux Cert Study — LPI Linux Essentials</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-elev: #161b22;
+    --bg-elev-2: #1c2430;
+    --border: #2d3748;
+    --border-soft: #21262d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --text-faint: #6e7681;
+    --accent: #3fb950;
+    --accent-dim: #238636;
+    --accent-glow: rgba(63,185,80,0.15);
+    --blue: #58a6ff;
+    --blue-dim: #1f6feb;
+    --red: #f85149;
+    --red-dim: #da3633;
+    --amber: #d29922;
+    --amber-glow: rgba(210,153,34,0.12);
+    --mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.6;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(63,185,80,0.06), transparent),
+      radial-gradient(ellipse 60% 50% at 100% 100%, rgba(88,166,255,0.04), transparent);
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 24px 20px 80px; }
+
+  /* ===== Terminal-style header ===== */
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 42px; height: 42px;
+    border-radius: 9px;
+    background: linear-gradient(145deg, var(--bg-elev-2), var(--bg-elev));
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    color: var(--accent);
+    font-size: 20px;
+    box-shadow: 0 0 0 1px rgba(63,185,80,0.1), 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .brand-text h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .brand-text p { font-size: 12px; color: var(--text-faint); font-family: var(--mono); }
+
+  .header-stats { display: flex; gap: 20px; }
+  .hstat { text-align: right; }
+  .hstat .num { font-size: 20px; font-weight: 700; font-family: var(--mono); line-height: 1; }
+  .hstat .lbl { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.08em; }
+  .hstat .num.green { color: var(--accent); }
+  .hstat .num.blue { color: var(--blue); }
+
+  /* ===== Menu / segment cards ===== */
+  .menu-intro { margin-bottom: 24px; }
+  .menu-intro h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .menu-intro p { color: var(--text-dim); font-size: 15px; }
+
+  .overall-progress {
+    background: var(--bg-elev);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 24px;
+  }
+  .progress-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .progress-row .label { font-size: 13px; color: var(--text-dim); font-family: var(--mono); }
+  .progress-row .val { font-size: 13px; color: var(--accent); font-family: var(--mono); font-weight: 600; }
+  .progress-track { height: 8px; background: var(--bg-elev-2); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent-dim), var(--accent)); border-radius: 99px; transition: width 0.5s ease; }
+
+  .segment-grid { display: grid; gap: 14px; }
+  .segment-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    text-align: left;
+    width: 100%;
+    color: inherit;
+    font-family: inherit;
+  }
+  .segment-card:hover { border-color: var(--border); background: var(--bg-elev-2); transform: translateY(-1px); }
+  .segment-card.done { border-color: rgba(63,185,80,0.4); }
+  .segment-card.done:hover { border-color: var(--accent); }
+
+  .seg-ring { position: relative; width: 52px; height: 52px; flex-shrink: 0; }
+  .seg-ring svg { transform: rotate(-90deg); }
+  .seg-ring .ring-bg { stroke: var(--bg-elev-2); }
+  .seg-ring .ring-fg { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+  .seg-ring .ring-num {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-weight: 700; font-size: 15px;
+  }
+
+  .seg-info { flex: 1; }
+  .seg-info h3 { font-size: 16px; font-weight: 600; margin-bottom: 3px; }
+  .seg-info .meta { font-size: 12px; color: var(--text-faint); font-family: var(--mono); }
+  .seg-badge {
+    font-size: 11px; padding: 4px 10px; border-radius: 99px;
+    font-family: var(--mono); font-weight: 600;
+    background: var(--bg-elev-2); color: var(--text-dim);
+  }
+  .seg-badge.pass { background: var(--accent-glow); color: var(--accent); }
+  .seg-badge.fail { background: rgba(248,81,73,0.12); color: var(--red); }
+  .seg-arrow { color: var(--text-faint); font-size: 18px; }
+
+  .menu-actions { display: flex; gap: 12px; margin-top: 22px; }
+  .exam-btn {
+    flex: 1;
+    padding: 16px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, var(--bg-elev-2), var(--bg-elev));
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .exam-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .exam-btn.reset:hover { border-color: var(--red); color: var(--red); }
+
+  /* ===== Quiz view ===== */
+  .quiz-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; gap: 12px;
+  }
+  .back-btn {
+    padding: 9px 16px; border-radius: 8px;
+    background: var(--bg-elev); border: 1px solid var(--border-soft);
+    color: var(--text-dim); font-family: inherit; font-size: 13px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .back-btn:hover { color: var(--text); border-color: var(--border); }
+  .quiz-title { text-align: center; flex: 1; }
+  .quiz-title h2 { font-size: 17px; font-weight: 700; }
+  .quiz-title .sub { font-size: 12px; color: var(--text-faint); font-family: var(--mono); margin-top: 2px; }
+
+  .quiz-progress-bar {
+    height: 4px; background: var(--bg-elev-2); border-radius: 99px;
+    margin-bottom: 24px; overflow: hidden;
+  }
+  .quiz-progress-fill { height: 100%; background: var(--blue); border-radius: 99px; transition: width 0.3s; }
+
+  .filter-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .filter-tab {
+    padding: 7px 14px; border-radius: 8px; font-size: 12px;
+    background: var(--bg-elev); border: 1px solid var(--border-soft);
+    color: var(--text-dim); cursor: pointer; font-family: var(--mono);
+    transition: all 0.15s;
+  }
+  .filter-tab:hover { color: var(--text); }
+  .filter-tab.active { background: var(--bg-elev-2); border-color: var(--border); color: var(--text); }
+
+  /* ===== Question card ===== */
+  .q-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 18px;
+    transition: border-color 0.2s;
+  }
+  .q-card.flagged { border-color: rgba(210,153,34,0.4); }
+  .q-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 18px; }
+  .q-num {
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    color: var(--text-faint); background: var(--bg-elev-2);
+    padding: 4px 9px; border-radius: 6px; flex-shrink: 0; margin-top: 2px;
+  }
+  .q-text { font-size: 16px; font-weight: 500; flex: 1; line-height: 1.5; }
+  .q-flag {
+    background: none; border: none; cursor: pointer; font-size: 18px;
+    color: var(--text-faint); flex-shrink: 0; padding: 2px; transition: color 0.15s;
+    line-height: 1;
+  }
+  .q-flag:hover { color: var(--amber); }
+  .q-flag.on { color: var(--amber); }
+
+  .q-hint {
+    display: inline-block; font-size: 11px; font-family: var(--mono);
+    color: var(--text-faint); margin-bottom: 14px;
+    padding: 3px 8px; background: var(--bg-elev-2); border-radius: 5px;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 9px; }
+  .option {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 13px 15px; border-radius: 9px;
+    background: var(--bg-elev-2); border: 1px solid transparent;
+    cursor: pointer; transition: all 0.15s; user-select: none;
+  }
+  .option:hover:not(.locked) { background: #232d3b; border-color: var(--border); }
+  .option.selected { background: rgba(88,166,255,0.1); border-color: var(--blue-dim); }
+  .option.locked { cursor: default; }
+  .option.correct { background: rgba(63,185,80,0.12); border-color: var(--accent-dim); }
+  .option.wrong { background: rgba(248,81,73,0.1); border-color: var(--red-dim); }
+
+  .opt-marker {
+    width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+    border: 2px solid var(--text-faint); display: flex; align-items: center; justify-content: center;
+    font-size: 11px; transition: all 0.15s;
+  }
+  .opt-marker.checkbox { border-radius: 5px; }
+  .option.selected .opt-marker { border-color: var(--blue); background: var(--blue); color: #fff; }
+  .option.correct .opt-marker { border-color: var(--accent); background: var(--accent); color: #05130a; }
+  .option.wrong .opt-marker { border-color: var(--red); background: var(--red); color: #fff; }
+  .opt-text { flex: 1; font-size: 14px; }
+  .opt-text code, .q-text code {
+    font-family: var(--mono); font-size: 0.9em;
+    background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px;
+  }
+
+  .explanation {
+    margin-top: 16px; padding: 14px 16px;
+    background: var(--bg-elev-2); border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    font-size: 13.5px; color: var(--text-dim);
+    animation: slideIn 0.3s ease;
+  }
+  .explanation strong { color: var(--accent); }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== Sticky footer ===== */
+  .footer-bar {
+    position: sticky; bottom: 16px; margin-top: 24px;
+    display: flex; gap: 12px;
+  }
+  .btn {
+    flex: 1; padding: 15px; border-radius: 11px;
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-primary { background: var(--accent-dim); color: #fff; box-shadow: 0 4px 16px rgba(35,134,54,0.3); }
+  .btn-primary:hover { background: var(--accent); box-shadow: 0 6px 20px rgba(63,185,80,0.35); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+  .btn-blue { background: var(--blue-dim); color: #fff; }
+  .btn-blue:hover { background: var(--blue); }
+  .btn-ghost { background: var(--bg-elev); border-color: var(--border-soft); color: var(--text-dim); }
+  .btn-ghost:hover { border-color: var(--border); color: var(--text); }
+
+  /* ===== Results banner ===== */
+  .result-banner {
+    background: var(--bg-elev); border: 1px solid var(--border-soft);
+    border-radius: 14px; padding: 22px; margin-bottom: 22px;
+    display: flex; align-items: center; gap: 22px;
+  }
+  .result-ring { position: relative; width: 84px; height: 84px; flex-shrink: 0; }
+  .result-ring svg { transform: rotate(-90deg); }
+  .result-ring .val {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; font-family: var(--mono);
+  }
+  .result-ring .val .pct { font-size: 22px; font-weight: 700; line-height: 1; }
+  .result-ring .val .frac { font-size: 10px; color: var(--text-faint); margin-top: 2px; }
+  .result-msg { flex: 1; }
+  .result-msg h3 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .result-msg p { color: var(--text-dim); font-size: 14px; }
+  .result-msg .verdict-pass { color: var(--accent); }
+  .result-msg .verdict-fail { color: var(--amber); }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--text-faint);
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+
+  .kbd-hint {
+    text-align: center; font-size: 11px; color: var(--text-faint);
+    font-family: var(--mono); margin-top: 20px;
+  }
+  .kbd-hint kbd {
+    background: var(--bg-elev-2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 1px 6px; font-size: 10px;
+  }
+
+  @media (max-width: 640px) {
+    .container { padding: 16px 14px 60px; }
+    .header-stats { gap: 12px; }
+    .hstat .num { font-size: 16px; }
+    .menu-intro h2 { font-size: 22px; }
+    .result-banner { flex-direction: column; text-align: center; }
+    .footer-bar { flex-direction: column; }
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="brand">
+      <div class="brand-mark">~$</div>
+      <div class="brand-text">
+        <h1>Linux Cert Study</h1>
+        <p>lpi-essentials · 80q · 4 segments</p>
+      </div>
+    </div>
+    <div class="header-stats" id="headerStats"></div>
+  </div>
+
+  <!-- Menu view -->
+  <div id="menuView">
+    <div class="menu-intro">
+      <h2>Study segments</h2>
+      <p>Break the 80-question bank into focused 20-question sprints. The real exam is 40 questions — pass threshold is 65%.</p>
+    </div>
+
+    <div class="overall-progress">
+      <div class="progress-row">
+        <span class="label">Overall completion</span>
+        <span class="val" id="overallPct">0%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="overallFill" style="width:0%"></div></div>
+    </div>
+
+    <div class="segment-grid" id="segmentGrid"></div>
+
+    <div class="menu-actions">
+      <button class="exam-btn" id="examBtn">⚡ Exam Simulator (40 random)</button>
+      <button class="exam-btn reset" id="resetBtn">↺ Reset progress</button>
+    </div>
+  </div>
+
+  <!-- Quiz view -->
+  <div id="quizView" class="hidden">
+    <div class="quiz-topbar">
+      <button class="back-btn" id="backBtn">← Menu</button>
+      <div class="quiz-title">
+        <h2 id="quizTitle">Segment 1</h2>
+        <div class="sub" id="quizSub">Questions 1–20</div>
+      </div>
+      <div style="width:70px"></div>
+    </div>
+
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizProgress" style="width:0%"></div></div>
+
+    <div id="resultBanner"></div>
+
+    <div class="filter-tabs" id="filterTabs"></div>
+
+    <div id="questionsContainer"></div>
+
+    <div class="footer-bar" id="footerBar"></div>
+
+    <div class="kbd-hint" id="kbdHint">Tip: press <kbd>1</kbd>–<kbd>5</kbd> to answer focused question · <kbd>F</kbd> to flag</div>
+  </div>
+</div>
+
+<script>
+// ============ QUESTION BANK ============
+const QUESTIONS = [
+  {q:1,question:"What is the purpose of the PATH environment variable?",answers:["It contains the absolute path to the current directory.","It allows the execution of commands without the need to know the location of the executable.","It specifies the location of a user's home directory.","It indicates the location of the default shell to be used when a user logs in.","It increases security by preventing commands from running in certain locations."],correct:1,explanation:"PATH is a colon-separated list of directories the shell searches when you type a command, letting you run executables without their full path."},
+  {q:2,question:"Which commands are used to get information on the proper use of ls? (Choose two)",answers:["usage ls","option ls","manual ls","man ls","info ls"],correct:[3,4],explanation:"<code>man ls</code> opens the manual page and <code>info ls</code> provides GNU documentation. Both explain command usage."},
+  {q:3,question:"Which of the following programs are web servers? (Choose two)",answers:["Apache","Dovecot","NGINX","Curl","Postfix"],correct:[0,2],explanation:"Apache and NGINX are web servers. Dovecot is an IMAP/POP mail server, Curl is a transfer tool, Postfix is an MTA."},
+  {q:4,question:"Which output comes from the command free?",answers:["total used free shared buff/cache available Mem: 15Gi 2.3Gi 9Gi 910Mi 3.0Gi 11Gi Swap: 2.0Gi 0B 2.0Gi","avg-cpu: %user %nice %system %iowait %steal %idle 16.36 0.00 2.99 1.06 0.00 79.59","120K /tmp","21:04 up 14 days, 7:43, 3 users, load average: 0.89, 1.00, 0.99","Filesystem Size Used Avail Use% Mounted on /dev/nvme0n1p2 468G 33G 412G 8% /"],correct:0,explanation:"<code>free</code> shows memory & swap. The others come from iostat/sar, du, uptime, and df."},
+  {q:5,question:"Which command can resolve a DNS name to an IP address?",answers:["query","iplookup","dns","host","dnsname"],correct:3,explanation:"<code>host</code> performs DNS lookups. <code>dig</code> and <code>nslookup</code> also work."},
+  {q:6,question:"What keyword begins a loop in a shell script?",answers:["for","forloop"],correct:0,explanation:"<code>for</code> starts a loop. Syntax: <code>for var in list; do ...; done</code>. (<code>while</code> and <code>until</code> also start loops.)"},
+  {q:7,question:"When typing a long command line, what single character splits a command across multiple lines?",answers:["/","\\"],correct:1,explanation:"The backslash <code>\\</code> is the line-continuation character; it escapes the newline."},
+  {q:8,question:"Which command searches for the file foo.txt under /home?",answers:["search /home foo.txt","find /home – file foo.txt","find /home –name foo.txt","search /home –file foo.txt","find /home foo.txt"],correct:2,explanation:"Syntax is <code>find PATH -name PATTERN</code>. The <code>-name</code> option matches by filename."},
+  {q:9,question:"A file -rw-r--r-- test.sh is a valid script but ./test.sh gives 'Permission denied'. What fixes it?",answers:["The SetUID bit should be set.","The execute bit should be set in the file's permissions.","The extension should change from .sh to .bin.","The user should be added to the exec group.","Run using #!./test.sh instead of ./test.sh."],correct:1,explanation:"Permissions are <code>rw-</code> with no <code>x</code>. Run <code>chmod +x test.sh</code> to add execute."},
+  {q:10,question:"Which tar options handle compression? (Choose two)",answers:["-bz","-z2","-z","-g","-j"],correct:[2,4],explanation:"<code>-z</code> = gzip, <code>-j</code> = bzip2. So <code>.tar.gz</code> uses -z and <code>.tar.bz2</code> uses -j."},
+  {q:11,question:"Which tasks can the command passwd accomplish? (Choose two)",answers:["Create a new user account.","Lock a user account.","Change a user's password.","Change a user's username.","Create a new user group."],correct:[1,2],explanation:"<code>passwd</code> changes passwords and can lock accounts with <code>-l</code>. Other tasks need useradd/usermod/groupadd."},
+  {q:12,question:"A directory contains a.txt and b.txt. Output of: for file in *.txt",answers:["*.txt","c.cav","a.txt b.txt","a.txt","a b"],correct:2,explanation:"<code>*.txt</code> expands to matching filenames, so the loop iterates over <code>a.txt</code> and <code>b.txt</code>."},
+  {q:13,question:"Which are typical services offered by public cloud providers? (Choose three)",answers:["Internet as a Service (IaaS)","Graphics as a Service (GaaS)","Infrastructure as a Service (IaaS)","Platform as a Service (PaaS)","Software as a Service (SaaS)"],correct:[2,3,4],explanation:"The three core cloud models are IaaS, PaaS, and SaaS. \"Internet aaS\" and \"Graphics aaS\" are not standard."},
+  {q:14,question:"Which Linux distribution is derived from Red Hat Enterprise Linux?",answers:["openSUSE","CentOS","Debian","Ubuntu","Raspbian"],correct:1,explanation:"CentOS is built from RHEL sources and is binary-compatible with it. (Rocky/AlmaLinux are modern equivalents.)"},
+  {q:15,question:"Which regex operator matches the preceding character zero or one time?",answers:["%","?","+","*","$"],correct:1,explanation:"<code>?</code> = 0 or 1. <code>*</code> = 0+, <code>+</code> = 1+, <code>$</code> = end of line."},
+  {q:16,question:"script.sh does 'echo $MYVAR'. Running 'MYVAR=value ./script.sh' prints blank. How to set MYVAR so it displays?",answers:["env MYVAR=value","export MYVAR=value","MYVAR=value","!MYVAR=value","$MYVAR=value"],correct:1,explanation:"<code>export</code> makes the variable part of the environment, so child processes (the script) inherit it. (Note: the syntax with a space, <code>MYVAR=value ./script.sh</code>, actually would work — but the answer expected here is export.)"},
+  {q:17,question:"Which command copies /etc/ including all sub-directories to /root/?",answers:["cp -v /etc/* /root","cp -r /etc/* /root","rcp /etc/* /root","cp -R /etc/*.* /root","copy /etc /root"],correct:1,explanation:"<code>-r</code> (or <code>-R</code>) copies recursively. <code>-v</code> is just verbose; without recursion cp skips directories."},
+  {q:18,question:"Which key exits less?",answers:["!","l","x","e","q"],correct:4,explanation:"<code>q</code> quits the <code>less</code> pager."},
+  {q:19,question:"Which program is a graphical editor for vector graphics?",answers:["Inkscape","NGINX","Python","MySQL","Samba"],correct:0,explanation:"Inkscape is an open-source vector graphics editor (SVG). The rest are a web server, language, database, and file-sharing service."},
+  {q:20,question:"How is a new Linux instance provisioned in an IaaS cloud?",answers:["Vendor delivers the distro to a cloud instance after purchase.","Prepared in a local VM then copied to the cloud.","Standard installer run via remote console.","A provider-specific config file describing the install is uploaded.","The provider offers pre-prepared images of popular distributions."],correct:4,explanation:"IaaS providers supply ready-made OS images (e.g. AWS AMIs); you pick one and launch — no manual install."},
+
+  {q:21,question:"Which statements are true regarding a typical shell script? (Choose two)",answers:["It is located in /usr/local/scripts/.","It has the executable permission bit set.","It is located in /etc/bash/scripts/.","It starts with the two-character sequence #!.","It is compiled into a binary file for the current architecture."],correct:[1,3],explanation:"Scripts need the execute bit and start with a shebang <code>#!</code>. They're interpreted, not compiled, and have no required location."},
+  {q:22,question:"What is the preferred source for installing new applications on Linux?",answers:["The vendor's version management system","A retail store","A CD-ROM disk","The distribution's package repository","The vendor's website"],correct:3,explanation:"The distro's package repository provides tested, signed packages with dependency handling and updates."},
+  {q:23,question:"What can be found in the /proc/ directory?",answers:["One directory per installed program.","One directory per configured service.","One directory per running process.","One log file per running service.","One file per existing user account."],correct:2,explanation:"<code>/proc</code> is a virtual filesystem with one numbered directory per running process (its PID), plus kernel info."},
+  {q:24,question:"What is the UID of the user root?",answers:["255","0","65536","-1","1"],correct:1,explanation:"root always has UID <code>0</code>, which grants full administrative privileges."},
+  {q:25,question:"How can most Linux commands typically display usage information?",answers:["With option /? or /??","With option -h or --help","With option /doc or /documentation","With option -m or --manpage","With option ?! or ?=!"],correct:1,explanation:"<code>-h</code> or <code>--help</code> is the conventional way to show usage. (<code>man</code> shows the full manual.)"},
+  {q:26,question:"Which device represents a hard disk partition?",answers:["/dev/part0","/dev/sda/p2","/dev/ttyS0","/dev/sata0","/dev/sda2"],correct:4,explanation:"<code>/dev/sda2</code> is the second partition of the first SATA/SCSI disk. <code>/dev/ttyS0</code> is a serial port."},
+  {q:27,question:"Which statement about Linux hardware drivers is correct?",answers:["Drivers are either compiled into the kernel or loaded as kernel modules.","Drivers aren't used because the BIOS handles all hardware access.","Drivers are regular programs the user must run to use a device.","Drivers are stored on devices and copied by the kernel when attached.","Drivers are downloaded from the vendor when a new device is attached."],correct:0,explanation:"Linux drivers are built into the kernel or loaded dynamically as kernel modules (<code>.ko</code> files)."},
+  {q:28,question:"Which permissions result from: chmod 654 file.txt?",answers:["-rwxrw---x","-rw-r-xr--","d—wxr-x--","–wxr-x--x","drw-r-xr--"],correct:1,explanation:"6=rw-, 5=r-x, 4=r--. So <code>-rw-r-xr--</code>. Each octal digit maps to owner/group/other."},
+  {q:29,question:"What is true about links in a Linux file system?",answers:["A symbolic link can point to a file on another file system.","When the symlink target is moved, the link updates automatically.","Only root can create hard links.","A hard link can only point to a directory, never a file.","A symbolic link can only point to a file, not a directory."],correct:0,explanation:"Symlinks store a path and can cross filesystems (and point to directories). Hard links can't cross filesystems and point to files."},
+  {q:30,question:"Which command shows the absolute path to the current working directory?",answers:["cd ..","pwd","cd ~/home","ls -l","who"],correct:1,explanation:"<code>pwd</code> = \"print working directory\", showing the full absolute path."},
+  {q:31,question:"How is the name of IP 198.51.100.165 stored on a DNS server for reverse DNS?",answers:["In the PTR record for 165.100.51.198.in-addr.arpa.","In the A record for 165.100.51.198.ipv4.arpa.","In the REV record for arpa.in-addr.198.51.100.165.","In the ARPA record for 165.100.51.198.rev.","In the RNAME record for 198-51-100-165.rev.arpa."],correct:0,explanation:"Reverse DNS uses <code>PTR</code> records under <code>in-addr.arpa</code> with octets reversed."},
+  {q:32,question:"Which character in a shell prompt indicates root privileges?",answers:["*","&","#","$","!"],correct:2,explanation:"<code>#</code> indicates a root shell; <code>$</code> indicates a normal user."},
+  {q:33,question:"Which statements about /etc/skel are correct? (Choose two)",answers:["It contains global settings for the Linux system.","Its files are copied to a new user's home directory at account creation.","It contains default config files used by useradd.","Its files are copied to the new user's home when starting the system.","root's personal settings are stored here."],correct:[1,2],explanation:"<code>/etc/skel</code> holds skeleton files that <code>useradd</code> copies into each new user's home directory."},
+  {q:34,question:"What is true about the su command?",answers:["It changes the name of the main administrator account.","It runs a shell or command as another user.","It locks the root account in specific time frames.","It is the default shell of the root account.","It can only be used by root."],correct:1,explanation:"<code>su</code> (\"substitute user\") starts a shell or runs a command as another user, defaulting to root."},
+  {q:35,question:"Which command adds /new/dir/ to the PATH variable?",answers:["export $PATH=/new/dir:$PATH","$PATH=/new/dir:$PATH","export PATH=/new/dir:PATH","export PATH=/new/dir:$PATH","PATH=/new/dir:PATH"],correct:3,explanation:"<code>export PATH=/new/dir:$PATH</code> prepends the directory and exports it. You reference the old value with <code>$PATH</code>."},
+  {q:36,question:"Which command displays file names only and no additional information?",answers:["ls -alh","ls -l","ls -a","ls -lh","ls -nl"],correct:2,explanation:"<code>ls -a</code> lists names (including hidden). The <code>-l</code> variants add long details like permissions and size."},
+  {q:37,question:"User is in /home/user/Downloads/ and runs: ls ../Documents/ — which directory's content shows?",answers:["/home/user/Downloads/Documents/","/Documents/","/home/Documents","/home/user/Documents/","/home/user/Documents/Downloads/"],correct:3,explanation:"<code>..</code> goes up one level to <code>/home/user/</code>, so <code>../Documents/</code> is <code>/home/user/Documents/</code>."},
+  {q:38,question:"What is true about the owner of a file?",answers:["Each file is owned by exactly one user and one group.","When a user is deleted, all files owned by them disappear.","The file's owner must be a member of the file's group.","The owner always has full permissions on the file.","The owner cannot be changed once assigned."],correct:0,explanation:"Every file has exactly one owning user and one owning group. Ownership can be changed with <code>chown</code>/<code>chgrp</code>."},
+  {q:39,question:"Which command sorts the output of export-logs?",answers:["export-logs > sort","export-logs < sort","export-logs <> sort","export-logs | sort","export-logs & sort"],correct:3,explanation:"The pipe <code>|</code> sends one command's stdout to another's stdin — here into <code>sort</code>."},
+  {q:40,question:"What is true about a recursive directory listing?",answers:["It previews content of each file.","It includes filesystem internals like inodes.","It includes the permissions of the directory listed.","It includes ownership information for files.","It includes the content of sub-directories."],correct:4,explanation:"Recursive (<code>ls -R</code>) descends into and lists all sub-directories' contents."},
+
+  {q:41,question:"Which commands output the content of the file 'Texts 2.txt'? (Choose two)",answers:["cat Texts\\ 2.txt","cat -- Texts 2.txt","cat |Texts 2.txt|","cat 'Texts\\ 2.txt'","cat 'Texts 2.txt'"],correct:[0,4],explanation:"The space must be escaped with <code>\\</code> or the name quoted. Inside quotes you don't also escape, so <code>'Texts 2.txt'</code> works but <code>'Texts\\ 2.txt'</code> would look for a literal backslash."},
+  {q:42,question:"Change ownership of doku.odt to new owner 'tux'. Which command?",answers:["transfer tux: doku.odt","chmod u=tux doku.odt","chown tux doku.odt","newuser doku.odt tux","passwd doku.odt:tux"],correct:2,explanation:"<code>chown tux doku.odt</code> sets the file owner to tux."},
+  {q:43,question:"Which command adds user tux AND creates their home with default config files?",answers:["usercreate tux","defaultuser tux","passwd –a tux","useradd –o default tux","useradd –m tux"],correct:4,explanation:"<code>useradd -m tux</code> creates the home directory and populates it from <code>/etc/skel</code>."},
+  {q:44,question:"Which example shows the general structure of a for loop in a shell script?",answers:["for *.txt ( echo $i )","for ls *.txt exec {} \\;","foreach @{file} { echo $i }","for file in *.txt do echo $i done","for *.txt as file => echo $file"],correct:3,explanation:"Structure: <code>for VAR in LIST; do COMMANDS; done</code>. Option 4 matches (with implied separators)."},
+  {q:45,question:"Which statement about Linux passwords is true?",answers:["Passwords may be at most six characters long.","Passwords may never start with a non-letter.","Passwords are only stored in hashed form.","All passwords can be decrypted with an admin master password.","Users cannot change their password once set."],correct:2,explanation:"Passwords are stored as one-way hashes (in <code>/etc/shadow</code>), never in plaintext or reversibly encrypted."},
+  {q:46,question:"What information can top display?",answers:["User groups ordered by number of members.","User accounts ordered by number of logins.","Running processes ordered by CPU or RAM consumption.","Existing files ordered by size.","User accounts ordered by number of files."],correct:2,explanation:"<code>top</code> shows a live, sortable list of running processes by CPU/memory usage."},
+  {q:47,question:"Differences between a private browser window and a regular one? (Choose three)",answers:["Private windows do not send regular stored cookies.","Private windows do not store cookies persistently.","Private windows do not allow printing or storing websites.","Private windows do not support logins into websites.","Private windows do not keep records in browser history."],correct:[0,1,4],explanation:"Private mode: doesn't send existing stored cookies, doesn't persist new cookies, and doesn't record history. Printing and logins still work."},
+  {q:48,question:"Which files are the source of this output: uid=1000(bob) gid=1000(bob) groups=... (Choose two)",answers:["/var/db/users","/home/index","/etc/id","/etc/passwd","/etc/group"],correct:[3,4],explanation:"The <code>id</code> output combines user info from <code>/etc/passwd</code> and group memberships from <code>/etc/group</code>."},
+  {q:49,question:"What is the return value of a shell script after successful execution?",answers:["-1","255","1","0","-255"],correct:3,explanation:"Exit code <code>0</code> means success; non-zero indicates an error."},
+  {q:50,question:"Which command extracts the compressed archive file1.tar.gz?",answers:["detar file1.tar.gz","tar --extract file1.tar.gz","tar -xzf file1.tar.gz","tar -czf file1.tar.gz","ztar file1.tar.gz"],correct:2,explanation:"<code>-x</code> extract, <code>-z</code> gzip, <code>-f</code> file. (<code>-c</code> would create instead.)"},
+  {q:51,question:"A valid script -rwxr-xr-x test.sh — how can it be executed? (Choose two)",answers:["cmd ./test.sh","${test.sh}","run test.sh","bash test.sh","./test.sh"],correct:[3,4],explanation:"<code>./test.sh</code> runs it directly (it has execute bits) and <code>bash test.sh</code> runs it via the interpreter."},
+  {q:52,question:"Which output could stem from the command last?",answers:["Last login: Fri Mar 23 10:56:39 2018 from server.example.com","1 ls 2 cat text.txt 3 logout","EXT4-fs(dm7): mounted filesystem with ordered data mode.","Password for user last changed at Sat Mar 31 16:38:57 EST 2018","root tty2 Wed May 17 21:11 - 21:11 (00:00)"],correct:4,explanation:"<code>last</code> shows login sessions with user, terminal, and time range — matching the tty2 line."},
+  {q:53,question:"Which directory must be mounted read-write if on its own dedicated file system?",answers:["/etc","/var","/usr","/opt","/lib"],correct:1,explanation:"<code>/var</code> holds constantly changing data (logs, spools, caches) and must be writable. <code>/usr</code> can be read-only."},
+  {q:54,question:"Which directory contains documentation and example config files for installed packages?",answers:["/usr/examples/","/var/info/","/usr/share/doc/","/etc/defaults/","/doc/"],correct:2,explanation:"<code>/usr/share/doc/</code> stores per-package READMEs, changelogs, and example configs."},
+  {q:55,question:"Which permissions are set on the /tmp/ directory?",answers:["rwxrwS---","rwSrw-rw-","rwX","r-xr-X--t","rwxrwxrwt"],correct:4,explanation:"<code>/tmp</code> is <code>rwxrwxrwt</code> — world-writable with the sticky bit (<code>t</code>) so users can only delete their own files."},
+  {q:56,question:"What is defined by a Free Software license?",answers:["Limits on the purposes the software may be used for.","Which programming languages may extend the program.","Conditions for modifying and distributing the software.","A complete list of required libraries.","Technical documentation each contributor must provide."],correct:2,explanation:"Free Software licenses define the terms under which you may use, modify, and redistribute the software."},
+  {q:57,question:"rm Downloads fails ('Is a directory'). Which commands remove the empty Downloads? (Choose two)",answers:["rmdir Downloads","undir Downloads","rm –r Downloads","dir –r Downloads","rem Downloads"],correct:[0,2],explanation:"<code>rmdir</code> removes empty directories; <code>rm -r</code> removes directories recursively."},
+  {q:58,question:"Team knows RHEL and wants a free, subscription-less server. Which distro applies their RHEL knowledge best?",answers:["Raspbian","Ubuntu Linux LTS","CentOS","Debian GNU/Linux","openSUSE"],correct:2,explanation:"CentOS is RHEL-derived and free, so RHEL skills transfer directly."},
+  {q:59,question:"What happens to a file outside the home dir when its owner's account is deleted? (Choose two)",answers:["root is set as the new owner.","The file is removed from the file system.","Ownership and permissions remain unchanged.","The UID of the former owner is shown when listing details.","During fsck the file is moved to /lost+found."],correct:[2,3],explanation:"The file stays put with its numeric UID intact; since the user no longer exists, listings show the bare UID number."},
+  {q:60,question:"What is true about the dmesg command? (Choose two)",answers:["It sends messages to all current user sessions.","It might not display older info that was overwritten.","It immediately outputs all new journal messages.","It displays the content of the kernel's ring buffer.","It traces a command and shows each step."],correct:[1,3],explanation:"<code>dmesg</code> prints the kernel ring buffer, a fixed-size circular buffer where old messages get overwritten."},
+
+  {q:61,question:"Which command creates ZIP archive poems.zip with all .txt files in the current directory?",answers:["zip *.txt > poems.zip","zip cfz poems.zip *.txt","zcat *.txt poems.zip","zip poems.zip *.txt","cat *.txt | zip poems.zip"],correct:3,explanation:"Syntax: <code>zip ARCHIVE FILES</code>, so <code>zip poems.zip *.txt</code>."},
+  {q:62,question:"Which type of bus can connect hard disk drives with the motherboard?",answers:["The Auto bus","The CPU bus","The RAM bus","The NUMA bus","The SATA bus"],correct:4,explanation:"<code>SATA</code> (Serial ATA) is the standard bus for connecting storage drives."},
+  {q:63,question:"Which statement is true about Free Software?",answers:["It is only distributed as a compiled binary.","It must always be available free of charge.","It is developed by volunteers only.","It may be modified by anyone using it.","It only runs on Linux."],correct:3,explanation:"A core freedom is the right to study and modify the source code. \"Free\" means freedom, not necessarily zero cost."},
+  {q:64,question:"What is a Linux distribution?",answers:["A bundling of the Linux kernel, system utilities and other software.","Rules governing distribution of kernel source code.","The Linux file system seen from root after mounting.","Changes enabling Linux to run on another architecture.","An OS based on Linux but incompatible with the regular kernel."],correct:0,explanation:"A distribution packages the kernel together with utilities, libraries, a package manager, and applications into a usable OS."},
+  {q:65,question:"Which value could be a process ID on Linux?",answers:["/bin/bash","/sys/pid/9a14","60b503cd-019e-4300-a7be-922f074ef5ce","fff3","21398"],correct:4,explanation:"PIDs are positive integers. <code>21398</code> is valid; <code>fff3</code> is hex, not a PID."},
+  {q:66,question:"What command displays manual pages?",answers:["info --manual","man","manul","lsman","help -m"],correct:1,explanation:"<code>man</code> displays manual pages, e.g. <code>man ls</code>."},
+  {q:67,question:"Where is the operating system of a Raspberry Pi stored?",answers:["On the master device on the Pi's IDE bus.","On a read-only firmware partition next to the BIOS.","On a removable SD card inserted into the Pi.","On a Linux module connected to the GPIO pins.","On built-in rewritable flash storage."],correct:2,explanation:"A standard Raspberry Pi boots its OS from a removable microSD card."},
+  {q:68,question:"Differences between hard disk drives and solid state disks? (Choose two)",answers:["SSDs can store many times more data than HDDs.","HDDs can fail from physical damage while SSDs cannot fail.","SSDs provide faster access to stored data than HDDs.","HDDs have a motor and moving parts; SSDs do not.","/dev/sda is a hard disk while /dev/ssda is an SSD."],correct:[2,3],explanation:"SSDs are faster and have no moving parts; HDDs use spinning platters and a motor. Both can fail, and device naming doesn't distinguish them."},
+  {q:69,question:"Which command puts the lines of data.csv into alphabetical order?",answers:["wc -s data.csv","abc data.csv","grep --sort data.csv","sort data.csv","a..z data.csv"],correct:3,explanation:"<code>sort</code> orders lines alphabetically (or numerically with <code>-n</code>)."},
+  {q:70,question:"Which package management tool is used in Red Hat-based Linux systems?",answers:["rpm","apt-get","portage","packagectl","dpkg"],correct:0,explanation:"<code>rpm</code> (and <code>dnf</code>/<code>yum</code> on top of it) manages packages on Red Hat systems. <code>apt-get</code>/<code>dpkg</code> are Debian."},
+  {q:71,question:"Which protocol is used for automatic IP address configuration?",answers:["LDAP","DNS","SMTP","NFS","DHCP"],correct:4,explanation:"<code>DHCP</code> automatically assigns IP addresses and network settings to clients."},
+  {q:72,question:"Files: 'texts 1.txt', 'texts 2.txt', 'texts 3.csv'. Which command copies the two .txt files to /tmp/?",answers:["cp. \\.txt /tmp/","cp $?.txt /tmp/","cp ??.txt /tmp/","cp ?.txt /tmp/","cp *.txt /tmp/"],correct:4,explanation:"<code>*.txt</code> matches any name ending in .txt, so both .txt files copy while the .csv is skipped."},
+  {q:73,question:"Which command creates archive work.tar from the contents of ./work/?",answers:["tar work.tar < ./work/","tar –cf work.tar ./work/","tar --new work.tar ./work/","tar –create work.tgz –content ./work/","tar work > work.tar"],correct:1,explanation:"<code>-c</code> create, <code>-f</code> specifies the archive filename: <code>tar -cf work.tar ./work/</code>."},
+  {q:74,question:"Which command finds all lines in operating-systems.txt containing 'linux', case-insensitive?",answers:["grep -i linux operating-systems.txt","cut [Ll][Ii][Nn][Uu][Xx] operating-systems.txt","less -i linux operating-systems.txt","igrep linux operating-systems.txt","cut linux operating-systems.txt"],correct:0,explanation:"<code>grep -i</code> searches case-insensitively for the pattern."},
+  {q:75,question:"What parameter of ls prints a recursive listing of a directory's content?",answers:["-a","-l","-R","-r","-d"],correct:2,explanation:"<code>-R</code> (capital) recursively lists subdirectories. Lowercase <code>-r</code> reverses sort order."},
+  {q:76,question:"What information is stored in /etc/passwd? (Choose three)",answers:["The username","The user's default shell","The user's storage space limit","The numerical user ID","The encrypted password"],correct:[0,1,3],explanation:"<code>/etc/passwd</code> holds username, UID, GID, home directory, and default shell. The password hash lives in <code>/etc/shadow</code>."},
+  {q:77,question:"Why are web browser cookies considered dangerous?",answers:["They store critical data lost when deleted.","They are always public and accessible to anyone.","They consume significant storage and can exhaust disk space.","They support identification and tracking of users.","They can contain and execute viruses and malware."],correct:3,explanation:"Cookies enable tracking users across sites, raising privacy concerns. They're plain data and can't execute code."},
+  {q:78,question:"A server needs multi-year support with security updates. Which distros meet this? (Choose two)",answers:["Fedora Linux","Ubuntu Linux non-LTS","Red Hat Enterprise Linux","Ubuntu Linux LTS","Debian GNU/Linux Unstable"],correct:[2,3],explanation:"RHEL and Ubuntu LTS provide long-term (years) support. Fedora, non-LTS Ubuntu, and Debian Unstable have short/no guaranteed support windows."},
+  {q:79,question:"Which DNS record types hold an IP address? (Choose two)",answers:["CNAME","AAAA","A","MX","NS"],correct:[1,2],explanation:"<code>A</code> holds an IPv4 address and <code>AAAA</code> holds an IPv6 address. CNAME/MX/NS point to names."},
+  {q:80,question:"Which command sets the variable USERNAME to the value bob?",answers:["var USERNAME=bob","set USERNAME bob","USERNAME=bob","USERNAME<=bob","$USERNAME==bob"],correct:2,explanation:"Shell variable assignment is <code>NAME=value</code> with no spaces around the <code>=</code>."}
+];
+
+// ============ STATE (in-memory) ============
+const SEGMENT_SIZE = 20;
+const PASS_THRESHOLD = 65;
+const TOTAL_SEGMENTS = Math.ceil(QUESTIONS.length / SEGMENT_SIZE);
+
+let state = {
+  view: 'menu',
+  currentSegment: 0,
+  isExam: false,
+  examQuestions: [],
+  answers: {},          // {qNum: index | [indices]}
+  submittedSegments: {},// {segIndex: {score, total}}
+  flagged: {},          // {qNum: true}
+  filter: 'all',        // all | flagged | wrong
+  submitted: false
+};
+
+// ============ HELPERS ============
+function normArr(x){ return Array.isArray(x) ? [...x].sort((a,b)=>a-b) : [x]; }
+function isMulti(q){ return Array.isArray(q.correct); }
+
+function isCorrect(q){
+  const ua = state.answers[q.q];
+  if(isMulti(q)){
+    const uaa = Array.isArray(ua) ? [...ua].sort((a,b)=>a-b) : [];
+    return JSON.stringify(uaa) === JSON.stringify([...q.correct].sort((a,b)=>a-b));
+  }
+  return ua === q.correct;
+}
+
+function isAnswered(q){
+  const ua = state.answers[q.q];
+  if(isMulti(q)) return Array.isArray(ua) && ua.length>0;
+  return ua !== undefined;
+}
+
+function getActiveQuestions(){
+  if(state.isExam) return state.examQuestions;
+  return QUESTIONS.slice(state.currentSegment*SEGMENT_SIZE, (state.currentSegment+1)*SEGMENT_SIZE);
+}
+
+function segmentAnsweredCount(segIdx){
+  const qs = QUESTIONS.slice(segIdx*SEGMENT_SIZE,(segIdx+1)*SEGMENT_SIZE);
+  return qs.filter(q => {
+    const ua = state.answers[q.q];
+    if(Array.isArray(q.correct)) return Array.isArray(ua) && ua.length>0;
+    return ua !== undefined;
+  }).length;
+}
+
+function ring(size, pct, color, stroke){
+  const r = (size-stroke)/2;
+  const c = 2*Math.PI*r;
+  const off = c*(1-pct/100);
+  return `<svg width="${size}" height="${size}">
+    <circle class="ring-bg" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke-width="${stroke}"/>
+    <circle class="ring-fg" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke-width="${stroke}"
+      stroke="${color}" stroke-dasharray="${c}" stroke-dashoffset="${off}"/>
+  </svg>`;
+}
+
+// ============ RENDER: MENU ============
+function renderMenu(){
+  const totalAnswered = QUESTIONS.filter(q=>{
+    const ua = state.answers[q.q];
+    if(Array.isArray(q.correct)) return Array.isArray(ua)&&ua.length>0;
+    return ua!==undefined;
+  }).length;
+  const overallPct = Math.round(totalAnswered/QUESTIONS.length*100);
+
+  document.getElementById('overallPct').textContent = overallPct+'%';
+  document.getElementById('overallFill').style.width = overallPct+'%';
+
+  // header stats
+  const passedSegs = Object.values(state.submittedSegments).filter(s=>Math.round(s.score/s.total*100)>=PASS_THRESHOLD).length;
+  document.getElementById('headerStats').innerHTML = `
+    <div class="hstat"><div class="num green">${totalAnswered}</div><div class="lbl">Answered</div></div>
+    <div class="hstat"><div class="num blue">${passedSegs}/${TOTAL_SEGMENTS}</div><div class="lbl">Passed</div></div>
+  `;
+
+  const grid = document.getElementById('segmentGrid');
+  grid.innerHTML = '';
+  for(let i=0;i<TOTAL_SEGMENTS;i++){
+    const start = i*SEGMENT_SIZE+1;
+    const end = Math.min((i+1)*SEGMENT_SIZE, QUESTIONS.length);
+    const answered = segmentAnsweredCount(i);
+    const total = end-start+1;
+    const pct = Math.round(answered/total*100);
+    const result = state.submittedSegments[i];
+    let badge = `<span class="seg-badge">${answered}/${total} done</span>`;
+    if(result){
+      const rp = Math.round(result.score/result.total*100);
+      const cls = rp>=PASS_THRESHOLD ? 'pass' : 'fail';
+      badge = `<span class="seg-badge ${cls}">${rp}% ${rp>=PASS_THRESHOLD?'✓':''}</span>`;
+    }
+    const done = answered===total;
+    const card = document.createElement('button');
+    card.className = 'segment-card'+(done?' done':'');
+    card.innerHTML = `
+      <div class="seg-ring">
+        ${ring(52, pct, 'var(--accent)', 4)}
+        <div class="ring-num">${i+1}</div>
+      </div>
+      <div class="seg-info">
+        <h3>Segment ${i+1}</h3>
+        <div class="meta">Questions ${start}–${end}</div>
+      </div>
+      ${badge}
+      <span class="seg-arrow">→</span>
+    `;
+    card.onclick = ()=>openSegment(i);
+    grid.appendChild(card);
+  }
+}
+
+// ============ RENDER: QUIZ ============
+function renderQuiz(){
+  const qs = getActiveQuestions();
+  const title = document.getElementById('quizTitle');
+  const sub = document.getElementById('quizSub');
+
+  if(state.isExam){
+    title.textContent = 'Exam Simulator';
+    sub.textContent = `40 random questions · pass ≥ ${PASS_THRESHOLD}%`;
+  } else {
+    title.textContent = `Segment ${state.currentSegment+1}`;
+    const start = state.currentSegment*SEGMENT_SIZE+1;
+    const end = Math.min((state.currentSegment+1)*SEGMENT_SIZE, QUESTIONS.length);
+    sub.textContent = `Questions ${start}–${end}`;
+  }
+
+  // progress
+  const answered = qs.filter(isAnswered).length;
+  document.getElementById('quizProgress').style.width = (answered/qs.length*100)+'%';
+
+  // result banner
+  const rb = document.getElementById('resultBanner');
+  if(state.submitted){
+    const score = qs.filter(isCorrect).length;
+    const pct = Math.round(score/qs.length*100);
+    const pass = pct>=PASS_THRESHOLD;
+    rb.innerHTML = `
+      <div class="result-banner">
+        <div class="result-ring">
+          ${ring(84, pct, pass?'var(--accent)':'var(--amber)', 6)}
+          <div class="val"><span class="pct" style="color:${pass?'var(--accent)':'var(--amber)'}">${pct}%</span><span class="frac">${score}/${qs.length}</span></div>
+        </div>
+        <div class="result-msg">
+          <h3 class="${pass?'verdict-pass':'verdict-fail'}">${pass?'Passed 🎉':'Keep studying'}</h3>
+          <p>${pass
+            ? `Solid — you're above the ${PASS_THRESHOLD}% threshold. Review any misses below, then move on.`
+            : `You need ${PASS_THRESHOLD}% to pass. Focus on the ${qs.length-score} question${qs.length-score!==1?'s':''} you missed — explanations are shown inline.`}</p>
+        </div>
+      </div>`;
+  } else {
+    rb.innerHTML = '';
+  }
+
+  // filter tabs (only after submit)
+  const ft = document.getElementById('filterTabs');
+  if(state.submitted){
+    const wrongCount = qs.filter(q=>!isCorrect(q)).length;
+    const flagCount = qs.filter(q=>state.flagged[q.q]).length;
+    ft.innerHTML = `
+      <button class="filter-tab ${state.filter==='all'?'active':''}" data-f="all">All (${qs.length})</button>
+      <button class="filter-tab ${state.filter==='wrong'?'active':''}" data-f="wrong">Missed (${wrongCount})</button>
+      <button class="filter-tab ${state.filter==='flagged'?'active':''}" data-f="flagged">Flagged (${flagCount})</button>
+    `;
+    ft.querySelectorAll('.filter-tab').forEach(t=>{
+      t.onclick = ()=>{ state.filter = t.dataset.f; renderQuiz(); };
+    });
+  } else {
+    ft.innerHTML = '';
+  }
+
+  // questions
+  const container = document.getElementById('questionsContainer');
+  container.innerHTML = '';
+  let visible = qs;
+  if(state.submitted && state.filter==='wrong') visible = qs.filter(q=>!isCorrect(q));
+  if(state.submitted && state.filter==='flagged') visible = qs.filter(q=>state.flagged[q.q]);
+
+  if(visible.length===0){
+    container.innerHTML = `<div class="empty-state"><div class="icon">✓</div><p>Nothing here — ${state.filter==='wrong'?'you got them all right!':'no flagged questions.'}</p></div>`;
+  }
+
+  visible.forEach((q, displayIdx)=>{
+    const card = document.createElement('div');
+    card.className = 'q-card'+(state.flagged[q.q]?' flagged':'');
+    card.id = 'qcard-'+q.q;
+
+    const multi = isMulti(q);
+    const hint = multi ? `<span class="q-hint">Select ${q.correct.length}</span>` : '';
+
+    let optsHtml = '';
+    q.answers.forEach((ans, idx)=>{
+      const ua = state.answers[q.q];
+      const selected = multi ? (Array.isArray(ua)&&ua.includes(idx)) : ua===idx;
+      const correctOpt = multi ? q.correct.includes(idx) : idx===q.correct;
+
+      let cls = 'option';
+      if(state.submitted){
+        cls += ' locked';
+        if(correctOpt) cls += ' correct';
+        else if(selected) cls += ' wrong';
+      } else if(selected){
+        cls += ' selected';
+      }
+
+      const markerCls = 'opt-marker'+(multi?' checkbox':'');
+      let mark = '';
+      if(state.submitted){
+        if(correctOpt) mark='✓';
+        else if(selected) mark='✕';
+      } else if(selected){
+        mark = multi ? '✓' : '●';
+      }
+
+      optsHtml += `<div class="${cls}" data-q="${q.q}" data-idx="${idx}">
+        <div class="${markerCls}">${mark}</div>
+        <div class="opt-text">${ans}</div>
+      </div>`;
+    });
+
+    const explanation = state.submitted
+      ? `<div class="explanation"><strong>${isCorrect(q)?'Correct.':'Answer:'}</strong> ${q.explanation}</div>`
+      : '';
+
+    card.innerHTML = `
+      <div class="q-head">
+        <span class="q-num">Q${q.q}</span>
+        <div class="q-text">${q.question}</div>
+        <button class="q-flag ${state.flagged[q.q]?'on':''}" data-flag="${q.q}" title="Flag for review">⚑</button>
+      </div>
+      ${hint}
+      <div class="options">${optsHtml}</div>
+      ${explanation}
+    `;
+    container.appendChild(card);
+  });
+
+  // wire option clicks
+  if(!state.submitted){
+    container.querySelectorAll('.option').forEach(opt=>{
+      opt.onclick = ()=>{
+        const qNum = +opt.dataset.q;
+        const idx = +opt.dataset.idx;
+        const q = QUESTIONS.find(x=>x.q===qNum);
+        if(isMulti(q)){
+          const cur = Array.isArray(state.answers[qNum]) ? state.answers[qNum] : [];
+          state.answers[qNum] = cur.includes(idx) ? cur.filter(a=>a!==idx) : [...cur, idx];
+        } else {
+          state.answers[qNum] = idx;
+        }
+        renderQuiz();
+      };
+    });
+  }
+  // wire flag clicks
+  container.querySelectorAll('.q-flag').forEach(fb=>{
+    fb.onclick = (e)=>{
+      e.stopPropagation();
+      const qNum = +fb.dataset.flag;
+      state.flagged[qNum] = !state.flagged[qNum];
+      renderQuiz();
+    };
+  });
+
+  // footer
+  renderFooter(qs);
+}
+
+function renderFooter(qs){
+  const fb = document.getElementById('footerBar');
+  const answered = qs.filter(isAnswered).length;
+  if(!state.submitted){
+    fb.innerHTML = `
+      <button class="btn btn-primary" id="submitBtn" ${answered<qs.length?'disabled':''}>
+        ${answered<qs.length ? `Answer all (${answered}/${qs.length})` : 'Submit & Review'}
+      </button>`;
+    document.getElementById('submitBtn').onclick = submitQuiz;
+  } else {
+    let next = '';
+    if(!state.isExam && state.currentSegment < TOTAL_SEGMENTS-1){
+      next = `<button class="btn btn-blue" id="nextBtn">Next segment →</button>`;
+    }
+    fb.innerHTML = `
+      <button class="btn btn-ghost" id="retakeBtn">↺ Retake</button>
+      ${next}
+      <button class="btn btn-ghost" id="menuBtn2">Menu</button>`;
+    document.getElementById('retakeBtn').onclick = retakeQuiz;
+    document.getElementById('menuBtn2').onclick = goMenu;
+    const nb = document.getElementById('nextBtn');
+    if(nb) nb.onclick = ()=>openSegment(state.currentSegment+1);
+  }
+}
+
+// ============ ACTIONS ============
+function openSegment(idx){
+  state.view='quiz'; state.isExam=false; state.currentSegment=idx;
+  state.submitted=false; state.filter='all';
+  // clear answers for this segment so retaking is clean unless previously submitted
+  showView('quiz'); renderQuiz();
+  window.scrollTo({top:0});
+}
+
+function startExam(){
+  state.view='quiz'; state.isExam=true; state.submitted=false; state.filter='all';
+  const shuffled = [...QUESTIONS].sort(()=>Math.random()-0.5).slice(0,40);
+  state.examQuestions = shuffled;
+  // clear answers for exam questions
+  shuffled.forEach(q=>{ delete state.answers[q.q]; });
+  showView('quiz'); renderQuiz();
+  window.scrollTo({top:0});
+}
+
+function submitQuiz(){
+  state.submitted = true;
+  const qs = getActiveQuestions();
+  if(!state.isExam){
+    const score = qs.filter(isCorrect).length;
+    state.submittedSegments[state.currentSegment] = {score, total: qs.length};
+  }
+  renderQuiz();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function retakeQuiz(){
+  const qs = getActiveQuestions();
+  qs.forEach(q=>{ delete state.answers[q.q]; });
+  state.submitted=false; state.filter='all';
+  renderQuiz();
+  window.scrollTo({top:0});
+}
+
+function goMenu(){
+  state.view='menu'; state.submitted=false;
+  showView('menu'); renderMenu();
+  window.scrollTo({top:0});
+}
+
+function resetAll(){
+  if(!confirm('Reset all progress? This clears every answer and score.')) return;
+  state.answers={}; state.submittedSegments={}; state.flagged={};
+  goMenu();
+}
+
+function showView(v){
+  document.getElementById('menuView').classList.toggle('hidden', v!=='menu');
+  document.getElementById('quizView').classList.toggle('hidden', v!=='quiz');
+}
+
+// ============ KEYBOARD ============
+document.addEventListener('keydown', (e)=>{
+  if(state.view!=='quiz' || state.submitted) return;
+  // number keys answer the question currently in viewport center
+  if(e.key>='1' && e.key<='5'){
+    const cards = [...document.querySelectorAll('.q-card')];
+    const mid = window.innerHeight/2;
+    let target=null, best=Infinity;
+    cards.forEach(c=>{
+      const r=c.getBoundingClientRect();
+      const d=Math.abs((r.top+r.bottom)/2 - mid);
+      if(d<best){best=d;target=c;}
+    });
+    if(target){
+      const idx=+e.key-1;
+      const opt=target.querySelector(`.option[data-idx="${idx}"]`);
+      if(opt) opt.click();
+    }
+  }
+});
+
+// ============ INIT ============
+document.getElementById('backBtn').onclick = goMenu;
+document.getElementById('examBtn').onclick = startExam;
+document.getElementById('resetBtn').onclick = resetAll;
+renderMenu();
+showView('menu');
+</script>
+</body>
+</html>
